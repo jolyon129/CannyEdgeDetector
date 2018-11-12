@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 import canny
 import numpy as np
-
-# output_after_gaussian = gaussian_smoothing(input)
+import imageio
+from os import path
 
 # plt.figure(1)
 # # plt.subplot(221)
@@ -14,14 +14,61 @@ import numpy as np
 # plt.show()
 # np.save('output_after_gaussian', output_after_gaussian)
 
-input = np.load('output_after_gaussian.npy')
 
-(gradient_x, gradient_y) = canny.gradient_operator(input)
+# input = np.load('output_after_gaussian.npy')
+# (gradient_x, gradient_y, magnitude) = canny.gradient_operator(input)
+# plt.figure(3)
+# plt.title('Gradient Responses')
+# plt.subplot(311)
+# plt.imshow(gradient_x, cmap='gray')
+# plt.subplot(312)
+# plt.imshow(gradient_y, cmap='gray')
+# plt.subplot(313)
+# plt.imshow(magnitude, cmap='gray')
+# plt.show()
 #
-plt.figure(3)
-plt.title('Gradient Responses')
-plt.subplot(211)
-plt.imshow(gradient_x, cmap='gray')
-plt.subplot(212)
-plt.imshow(gradient_y, cmap='gray')
-plt.show()
+# np.save('gradient_x', gradient_x)
+# np.save('gradient_y', gradient_y)
+# np.save('magnitude', magnitude)
+
+output = path.join(path.dirname(__file__), 'output')
+input = imageio.imread('zebra-crossing-1.bmp')
+output_after_gaussian = canny.gaussian_smoothing(input)
+
+imageio.imsave(path.join(output, 'after_gaussian.bmp'), output_after_gaussian)
+
+# np.save('output_after_gaussian', output_after_gaussian)
+# after_gaussian = np.load('output_after_gaussian.npy')
+
+#
+# (gx, gy, magnitude) = canny.gradient_operator(after_gaussian)
+# imageio.imsave(path.join(output, 'gx.bmp'), gx)
+# imageio.imsave(path.join(output, 'gy.bmp'), gy)
+# imageio.imsave(path.join(output, 'magnitude.bmp'), magnitude)
+# np.save('gx', gx)
+# np.save('gy', gy)
+# np.save('magnitude', magnitude)
+
+# gx = np.load('gx.npy')
+# gy = np.load('gy.npy')
+# magnitude = np.load('magnitude.npy')
+# imageio.imsave('gx.bmp', gx)
+# imageio.imsave('gy.bmp', gy)
+# imageio.imsave('magnitude.bmp', magnitude)
+
+
+
+#
+# plt.figure(3, figsize = (8,8))
+# plt.subplot(311)
+# plt.imshow(gx, cmap='gray')
+# plt.subplot(312)
+# plt.imshow(gy, cmap='gray')
+# plt.subplot(313)
+# plt.imshow(magnitude, cmap='gray')
+# plt.show()
+#
+# magnitude_after_sup = canny.non_maxima_suppression(gx, gy, magnitude)
+# plt.figure(4)
+# plt.imshow(magnitude_after_sup, cmap='gray')
+# plt.show()
