@@ -16,12 +16,13 @@ def gaussian_smoothing(img):
                      [1, 1, 2, 2, 2, 1, 1]]
     # Initiate  a new Img Array, img.shape store the number of rows and columns
     new_gray = np.zeros([width, height])
-
     # There are 3 layers of pixels are out of boarder. I don't need to iterate those pixels.
     # narrow the range
+    width_range = width - 3
+    height_range = height - 3
     for row in range(width):
         for col in range(height):
-            if 3 <= row < width - 3 and 3 <= col < height - 3:
+            if 3 <= row < width_range and 3 <= col < height_range:
                 # if out of boundary
                 sum, x, y = 0, 0, 0
                 # do convolution wth the mask
@@ -34,7 +35,7 @@ def gaussian_smoothing(img):
                 new_gray[row][col] = sum / 140
     return new_gray
 
-
+@profile
 def gradient_operator(img):
     width = img.shape[0]
     height = img.shape[1]
@@ -97,7 +98,7 @@ def gradient_operator(img):
 
     return gx, gy, magnitude_arr
 
-
+@profile
 def non_maxima_suppression(gx, gy, magnitude):
     width = magnitude.shape[0]
     height = magnitude.shape[1]

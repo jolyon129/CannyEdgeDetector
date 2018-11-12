@@ -31,23 +31,22 @@ from os import path
 # np.save('gradient_y', gradient_y)
 # np.save('magnitude', magnitude)
 
-output = path.join(path.dirname(__file__), 'output')
+output_path = path.join(path.dirname(__file__), 'output')
+npy_path = path.join(path.dirname(__file__), 'npy')
+
 input = imageio.imread('zebra-crossing-1.bmp')
 output_after_gaussian = canny.gaussian_smoothing(input)
+imageio.imsave(path.join(output_path, 'after_gaussian.bmp'), output_after_gaussian)
+np.save(path.join(npy_path, 'output_after_gaussian'), output_after_gaussian)
 
-imageio.imsave(path.join(output, 'after_gaussian.bmp'), output_after_gaussian)
-
-np.save('output_after_gaussian', output_after_gaussian)
-
-
-# after_gaussian = np.load('output_after_gaussian.npy')
+# after_gaussian = np.load(path.join(npy_path, 'output_after_gaussian.npy'))
 # (gx, gy, magnitude) = canny.gradient_operator(after_gaussian)
-# imageio.imsave(path.join(output, 'gx.bmp'), gx)
-# imageio.imsave(path.join(output, 'gy.bmp'), gy)
-# imageio.imsave(path.join(output, 'magnitude.bmp'), magnitude)
-# np.save('gx', gx)
-# np.save('gy', gy)
-# np.save('magnitude', magnitude)
+# imageio.imsave(path.join(output_path, 'gx.bmp'), gx)
+# imageio.imsave(path.join(output_path, 'gy.bmp'), gy)
+# imageio.imsave(path.join(output_path, 'magnitude.bmp'), magnitude)
+# np.save(path.join(npy_path, 'gx'), gx)
+# np.save(path.join(npy_path, 'gy'), gy)
+# np.save(path.join(npy_path, 'magnitude'), magnitude)
 
 # gx = np.load('gx.npy')
 # gy = np.load('gy.npy')
@@ -55,7 +54,6 @@ np.save('output_after_gaussian', output_after_gaussian)
 # imageio.imsave('gx.bmp', gx)
 # imageio.imsave('gy.bmp', gy)
 # imageio.imsave('magnitude.bmp', magnitude)
-
 
 
 #
