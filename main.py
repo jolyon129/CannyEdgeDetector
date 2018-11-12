@@ -37,10 +37,10 @@ output_after_gaussian = canny.gaussian_smoothing(input)
 
 imageio.imsave(path.join(output, 'after_gaussian.bmp'), output_after_gaussian)
 
-# np.save('output_after_gaussian', output_after_gaussian)
-# after_gaussian = np.load('output_after_gaussian.npy')
+np.save('output_after_gaussian', output_after_gaussian)
 
-#
+
+# after_gaussian = np.load('output_after_gaussian.npy')
 # (gx, gy, magnitude) = canny.gradient_operator(after_gaussian)
 # imageio.imsave(path.join(output, 'gx.bmp'), gx)
 # imageio.imsave(path.join(output, 'gy.bmp'), gy)

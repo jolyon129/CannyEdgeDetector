@@ -3,7 +3,7 @@ import sys
 import imageio
 
 
-# @profile
+@profile
 def gaussian_smoothing(img):
     width = img.shape[0]
     height = img.shape[1]
@@ -21,22 +21,14 @@ def gaussian_smoothing(img):
     # narrow the range
     for row in range(width):
         for col in range(height):
-            if row - 3 < 0 or col - 3 < 0 or row + 3 > width - 1 or col + 3 > height - 1:
-                pass
-            else:
+            if 3 <= row < width - 3 and 3 <= col < height - 3:
                 # if out of boundary
                 sum, x, y = 0, 0, 0
                 # do convolution wth the mask
                 for i in range(7):
                     for j in range(7):
-                        if i < 3:
-                            x = row - (3 - i)
-                        else:
-                            x = row + (i - 3)
-                        if j < 3:
-                            y = col - (3 - j)
-                        else:
-                            y = col + (j - 3)
+                        x = row + (i - 3)
+                        y = col + (j - 3)
                         sum += img[x][y] * gaussian_mask[i][j]
                 # normalization
                 new_gray[row][col] = sum / 140
@@ -45,7 +37,7 @@ def gaussian_smoothing(img):
 
 def gradient_operator(img):
     width = img.shape[0]
-    height = img.shape[0]
+    height = img.shape[1]
     # Initiate three Img Arrays, img.shape store the number of rows and columns
     gx = np.zeros([width, height])
     gy = np.zeros([width, height])
@@ -63,16 +55,13 @@ def gradient_operator(img):
     for row in range(width):
         for col in range(height):
             # There are total 4 layers of pixels of the original image is out of boundary.
-            # Assign 0 to these pixels to indicate that there is no edge
-            if row - 4 < 0 or col - 4 < 0 or row + 4 > img.shape[0] - 1 or col + 4 > img.shape[1] - 1:
-                img[row][col] = 0
-            else:
+            if 4 <= row < width - 4 and 4 <= col < height - 4:
                 sum_gx, sum_gy, x, y = 0, 0, 0, 0
                 # Convolution
                 for i in range(3):
                     for j in range(3):
                         x = row + (i - 1)
-                        y = row + (j - 1)
+                        y = col + (j - 1)
                         sum_gx += img[x][y] * prewitt_mask['Gx'][i][j]
                         sum_gy += img[x][y] * prewitt_mask['Gy'][i][j]
                 # absolute value
