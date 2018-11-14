@@ -106,7 +106,7 @@ def gradient_operator(img):
 def non_maxima_suppression(gx, gy, magnitude):
     width = magnitude.shape[0]
     height = magnitude.shape[1]
-    magnitude_sup = np.zeros([width, height], dtype=np.uint8)
+    magnitude_after_sup = np.zeros([width, height], dtype=np.uint8)
 
     pi = np.pi
     # the smallest section of pi, pi/8
@@ -119,9 +119,9 @@ def non_maxima_suppression(gx, gy, magnitude):
                 # if gx is 0, then the angle is 90 degree, pi/2. The angle belongs to sector 2.
                 if gx[i][j] == 0:
                     if magnitude[i][j] > magnitude[i + 1][j] and magnitude[i][j] > magnitude[i - 1][j]:
-                        magnitude_sup[i][j] = magnitude[i][j]
+                        magnitude_after_sup[i][j] = magnitude[i][j]
                     else:
-                        magnitude_sup[i][j] = 0
+                        magnitude_after_sup[i][j] = 0
                 else:
                     angle = np.arctan(gy[i][j] / gx[i][j])
                     if angle < 0:
@@ -131,31 +131,72 @@ def non_maxima_suppression(gx, gy, magnitude):
                     if (7 * sec <= angle < 9 * sec) or (0 <= angle < sec) or (
                             2 * pi - sec <= angle <= 2 * pi):
                         if magnitude[i][j] > magnitude[i][j - 1] and magnitude[i][j] > magnitude[i][j + 1]:
-                            magnitude_sup[i][j] = magnitude[i][j]
+                            magnitude_after_sup[i][j] = magnitude[i][j]
                         else:
-                            magnitude_sup[i][j] = 0
+                            magnitude_after_sup[i][j] = 0
                     # if angle belongs to sector 1, pi/8<= angle < 3*pi/8 or 9* pi/8 <= angle< 11* pi/8
                     elif (sec <= angle < 3 * sec) or (9 * sec <= angle < 11 * sec):
                         if magnitude[i][j] > magnitude[i - 1][j + 1] and magnitude[i][j] > magnitude[i + 1][j - 1]:
-                            magnitude_sup[i][j] = magnitude[i][j]
+                            magnitude_after_sup[i][j] = magnitude[i][j]
                         else:
-                            magnitude_sup[i][j] = 0
+                            magnitude_after_sup[i][j] = 0
                     # if angle belongs to sector 2
                     elif (3 * sec <= angle < 5 * sec) or (11 * sec <= angle < 13 * sec):
                         if magnitude[i][j] > magnitude[i + 1][j] and magnitude[i][j] > magnitude[i - 1][j]:
-                            magnitude_sup[i][j] = magnitude[i][j]
+                            magnitude_after_sup[i][j] = magnitude[i][j]
                         else:
-                            magnitude_sup[i][j] = 0
+                            magnitude_after_sup[i][j] = 0
                     # if angle belongs to sector 3
                     else:
                         if magnitude[i][j] > magnitude[i - 1][j - 1] and magnitude[i][j] > magnitude[i + 1][j + 1]:
-                            magnitude_sup[i][j] = magnitude[i][j]
+                            magnitude_after_sup[i][j] = magnitude[i][j]
                         else:
-                            magnitude_sup[i][j] = 0
-    return magnitude_sup
+                            magnitude_after_sup[i][j] = 0
+    return magnitude_after_sup
 
 
+def thresholding(magnitude_after_sup, p):
+    width = magnitude_after_sup.shape[0]
+    height = magnitude_after_sup.shape[1]
+    output = np.zeros([width, height], dtype=np.uint8)
+    # initialize an arr to count the pixels of each gray level from 0 to 255
+    gray_level_count = [0 for i in range(256)]
+    for i in range(width):
+        for j in range(height):
+            gray_level_count[magnitude_after_sup[i][j]] += 1
+    #  The original total number of pixels(including 0)
+    total_pixels = width * height
+    # The number of edge pixels (The total number minus the number of pixels with gray value of 0)
+    num_edge_pixels = total_pixels - gray_level_count[0]
+    num_edge_pixels_after_threshold = None
+    # we need to find out a gray level T such that
+    # approximately target_num number of pixels have gray level value > T
+    target_num = p * num_edge_pixels
+    current_num = 0
+    min_difference = sys.maxsize
+    T = 0
+    # Iterate the gray level histogram find a gray level T such that the min difference is minimum,
+    # starting from the last one(gray_level_count).
+    # Since we only count edge pixels which has gray value greater than 0, we don't need to check gray_level_count[0]
+    for i in range(255, 1, -1):
+        current_num += gray_level_count[i]
+        current_difference = target_num - current_num
+        # When current_difference is less than 0, either T=i or T=i+1
+        if current_difference < 0:
+            # find the minimum difference in this 2 cases
+            if abs(current_difference) < min_difference:
+                T = i
+                num_edge_pixels_after_threshold = current_num
+            else:
+                T = i + 1
+                num_edge_pixels_after_threshold = current_num - gray_level_count[i]
+                break
+        # store the difference
+        min_difference = current_difference
 
-# input = imageio.imread('zebra-crossing-1.bmp')
-# output_after_gaussian = gaussian_smoothing(input)
-# np.save('output_after_gaussian', output_after_gaussian)
+    for row in range(width):
+        for col in range(height):
+            if magnitude_after_sup[row][col] > T:
+                output[row][col] = magnitude_after_sup[row][col]
+
+    return output, T, num_edge_pixels_after_threshold
