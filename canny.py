@@ -1,10 +1,16 @@
 import numpy as np
 import sys
 import imageio
+import os
 
 
-# @profile
 def gaussian_smoothing(img):
+    '''
+    Gaussian Smoothing
+    :param img: original image
+    :return: Return a new image
+    '''
+    # img.shape stores the number of rows and columns of the img
     width = img.shape[0]
     height = img.shape[1]
     gaussian_mask = [[1, 1, 2, 2, 2, 1, 1],
@@ -14,34 +20,39 @@ def gaussian_smoothing(img):
                      [2, 2, 4, 8, 4, 2, 2],
                      [1, 2, 2, 4, 2, 2, 1],
                      [1, 1, 2, 2, 2, 1, 1]]
-    # Initiate  a new Img Array, img.shape store the number of rows and columns
+    # Initiate  a new Img Array with 0 as default value
     new_gray = np.zeros([width, height], dtype=np.uint8)
-    # There are 3 layers of pixels are out of boarder. I don't need to iterate those pixels.
-    # narrow the range
+    # There are 3 layers of pixels are out of boarder.
     width_range = width - 3
     height_range = height - 3
     for row in range(width):
         for col in range(height):
+            # if the current pixel is not out of boundary
             if 3 <= row < width_range and 3 <= col < height_range:
-                # if out of boundary
-                sum, x, y = 0, 0, 0
+                # let the x and y be the corresponding pixel compared with the mask
+                sum_of_value, x, y = 0, 0, 0
                 # do convolution wth the mask
                 for i in range(7):
                     for j in range(7):
                         # offset the current index
                         x = row + (i - 3)
                         y = col + (j - 3)
-                        sum += img[x][y] * gaussian_mask[i][j]
+                        sum_of_value += img[x][y] * gaussian_mask[i][j]
                 # normalization
-                new_gray[row][col] = sum / 140
+                new_gray[row][col] = sum_of_value / 140
     return new_gray
 
 
-# @profile
 def gradient_operator(img):
+    '''
+    Caculate the gradients, Gx and Gy, and the magnitude
+    :param img: orignal image
+    :return: return there values (Gx, Gy, Magnitude)
+    '''
+    # img.shape store the number of rows and columns
     width = img.shape[0]
     height = img.shape[1]
-    # Initiate three Img Arrays, img.shape store the number of rows and columns
+    # Initiate three Img Arrays of zero, Gx, Gy, Magnitude
     gx = np.zeros([width, height], dtype=np.uint8)
     gy = np.zeros([width, height], dtype=np.uint8)
     magnitude_arr = np.zeros([width, height], dtype=np.uint8)
@@ -53,7 +64,7 @@ def gradient_operator(img):
                [0, 0, 0],
                [-1, -1, -1])
     }
-    # track the max and min of gx and gy
+    # When iterate the pixels, track the maximum and minimum of Gx and Gy
     gx_min, gy_min, gx_max, gy_max = sys.maxsize, sys.maxsize, 0, 0
     for row in range(width):
         for col in range(height):
@@ -68,10 +79,10 @@ def gradient_operator(img):
                         new_j = col + (j - 1)
                         sum_gx += img[new_i][new_j] * prewitt_mask['Gx'][i][j]
                         sum_gy += img[new_i][new_j] * prewitt_mask['Gy'][i][j]
-                # absolute value
+                # absolute the value
                 gx[row][col] = abs(sum_gx)
                 gy[row][col] = abs(sum_gy)
-                #  track the max and min of gx and gy, which are used in normalization
+                #  track the the maximum and minimum of Gx and Gy, which are used in normalization
                 if gx[row][col] > gx_max:
                     gx_max = gx[row][col]
                 if gx[row][col] < gx_min:
@@ -81,9 +92,10 @@ def gradient_operator(img):
                 if gy[row][col] < gy_min:
                     gy_min = gy[row][col]
 
-    # track the max and the min of magnitude
+    # Track the maximum and minimum of magnitude
     mag_max, mag_min = 0, sys.maxsize
-    # normalize Gx and Gy and generate magnitude array
+    # normalize Gx and Gy
+    # and generate magnitude array
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
             gx[i][j] = (gx[i][j] - gx_min) * 255 / (gx_max - gx_min)
@@ -102,20 +114,28 @@ def gradient_operator(img):
     return gx, gy, magnitude_arr
 
 
-# @profile
 def non_maxima_suppression(gx, gy, magnitude):
+    '''
+    Apply non-maxima suppresion based on given Gx, Gy, and Magnitude
+    :param gx: Normalized Gx
+    :param gy: Normalized Gy
+    :param magnitude: Normalized Manitude
+    :return:
+    '''
+    # img.shape store the number of rows and columns
     width = magnitude.shape[0]
     height = magnitude.shape[1]
+    # a new array of zero
     magnitude_after_sup = np.zeros([width, height], dtype=np.uint8)
-
     pi = np.pi
-    # the smallest section of pi, pi/8
+    # Each sector occupies two section, where a section is pi/8
     sec = pi / 8
     for i in range(width):
         for j in range(height):
             # There are overall 5 layers of pixels are out of boarder. I don't need to iterate those pixels.
             # narrow the range
             if 5 <= i < width - 5 and 5 <= j < height - 5:
+                # We need to deal with the case seperately when gx equals 0
                 # if gx is 0, then the angle is 90 degree, pi/2. The angle belongs to sector 2.
                 if gx[i][j] == 0:
                     if magnitude[i][j] > magnitude[i + 1][j] and magnitude[i][j] > magnitude[i - 1][j]:
@@ -156,11 +176,19 @@ def non_maxima_suppression(gx, gy, magnitude):
 
 
 def thresholding(magnitude_after_sup, p):
+    '''
+    Apply p-tile thresholding to the given magnitude
+    :param magnitude_after_sup: The magnitude after non-maxima suppression
+    :param p:  The percentage of pixels that are edge pixels. 0<=p<=1
+    :return:   (output, T, num_edge_pixels_after_threshold)
+    '''
     width = magnitude_after_sup.shape[0]
     height = magnitude_after_sup.shape[1]
     output = np.zeros([width, height], dtype=np.uint8)
-    # initialize an arr to count the pixels of each gray level from 0 to 255
+    # initialize an array of zero,
+    # which is ued to count the number of pixels in each gray level from 0 to 255
     gray_level_count = [0 for i in range(256)]
+    # Calculating the gray-scale histogram
     for i in range(width):
         for j in range(height):
             gray_level_count[magnitude_after_sup[i][j]] += 1
@@ -193,10 +221,58 @@ def thresholding(magnitude_after_sup, p):
                 break
         # store the difference
         min_difference = current_difference
-
+    # Threshold the pixels
     for row in range(width):
         for col in range(height):
+            # Only store the pixels that are great than T
             if magnitude_after_sup[row][col] > T:
                 output[row][col] = magnitude_after_sup[row][col]
-
+    print('When p is ' + str(p) + ':')
+    print('The threshold value, T is ' + str(T))
+    print('The Number of Edge Pixels is ' + str(num_edge_pixels_after_threshold))
     return output, T, num_edge_pixels_after_threshold
+
+
+# Run Canny Detector
+if __name__ == '__main__':
+    file_path, file_name, file_name_without_extension = None, None, None
+    for file in os.listdir(os.path.dirname(__file__)):
+        if file.endswith('.bmp'):
+            file_path = os.path.join(os.path.dirname(__file__), file)
+            file_name = file
+            break
+    if not file_path:
+        print('Cannot find a bmp file!')
+        sys.exit(0)
+
+    file_name_without_extension = file_name[:-4]
+    output_path = os.path.join(os.path.dirname(__file__), 'output', file_name_without_extension)
+    npy_path = os.path.join(os.path.dirname(__file__), 'npy', file_name_without_extension)
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+    if not os.path.exists(npy_path):
+        os.mkdir(npy_path)
+    input_img = imageio.imread(file_path)
+    output_after_gaussian = gaussian_smoothing(input_img)
+    imageio.imwrite(os.path.join(output_path, 'after_gaussian.bmp'), output_after_gaussian)
+
+    (gx, gy, magnitude) = gradient_operator(output_after_gaussian)
+    imageio.imwrite(os.path.join(output_path, 'gx.bmp'), gx)
+    imageio.imwrite(os.path.join(output_path, 'gy.bmp'), gy)
+    imageio.imwrite(os.path.join(output_path, 'magnitude.bmp'), magnitude)
+
+    magnitude_after_sup = non_maxima_suppression(gx, gy, magnitude)
+    imageio.imwrite(os.path.join(output_path, 'magnitude_after_sup.bmp'), magnitude_after_sup)
+
+    output_1, T_1, num_1 = thresholding(magnitude_after_sup, 0.1)
+    output_3, T_3, num_3 = thresholding(magnitude_after_sup, 0.3)
+    output_5, T_5, num_5 = thresholding(magnitude_after_sup, 0.5)
+
+    results = open(os.path.join(output_path, 'results.txt'), 'w')
+    results.write('P    ' + 'Threshold' + '  ' + 'Number of Edge Pixels' + '\n')
+    results.write('0.1  ' + str(T_1) + '    ' + str(num_1) + '\n')
+    results.write('0.3  ' + str(T_3) + '    ' + str(num_3) + '\n')
+    results.write('0.5  ' + str(T_5) + '    ' + str(num_5) + '\n')
+    imageio.imwrite(os.path.join(output_path, 'output_1.bmp'), output_1)
+    imageio.imwrite(os.path.join(output_path, 'output_3.bmp'), output_3)
+    imageio.imwrite(os.path.join(output_path, 'output_5.bmp'), output_5)

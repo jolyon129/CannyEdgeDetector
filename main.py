@@ -16,7 +16,7 @@ from os import path
 
 
 # input = np.load('output_after_gaussian.npy')
-# (gradient_x, gradient_y, magnitude) = canny.gradient_operator(input)
+# (gradient_x, gradient_y, magnitude) = canny.grad                                                                              ient_operator(input)
 # plt.figure(3)
 # plt.title('Gradient Responses')
 # plt.subplot(311)
@@ -56,6 +56,9 @@ npy_path = path.join(path.dirname(__file__), 'npy')
 # np.save(path.join(npy_path, 'magnitude_after_sup'), magnitude_after_sup)
 # imageio.imsave(path.join(output_path, 'magnitude_after_sup.bmp'), magnitude_after_sup)
 
+gx = np.load(path.join(npy_path, 'gx.npy'))
+gy = np.load(path.join(npy_path, 'gy.npy'))
+magnitude = np.load(path.join(npy_path, 'magnitude.npy'))
 magnitude_after_sup = np.load(path.join(npy_path, 'magnitude_after_sup.npy'))
 output_1 = canny.thresholding(magnitude_after_sup, 0.1)
 output_2 = canny.thresholding(magnitude_after_sup, 0.3)
