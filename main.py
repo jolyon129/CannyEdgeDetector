@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-import canny
+import canny_detector
 import numpy as np
 import imageio
 from os import path
@@ -60,9 +60,9 @@ gx = np.load(path.join(npy_path, 'gx.npy'))
 gy = np.load(path.join(npy_path, 'gy.npy'))
 magnitude = np.load(path.join(npy_path, 'magnitude.npy'))
 magnitude_after_sup = np.load(path.join(npy_path, 'magnitude_after_sup.npy'))
-output_1 = canny.thresholding(magnitude_after_sup, 0.1)
-output_2 = canny.thresholding(magnitude_after_sup, 0.3)
-output_3 = canny.thresholding(magnitude_after_sup, 0.5)
+output_1 = canny_detector.thresholding(magnitude_after_sup, 0.1)
+output_2 = canny_detector.thresholding(magnitude_after_sup, 0.3)
+output_3 = canny_detector.thresholding(magnitude_after_sup, 0.5)
 imageio.imsave(path.join(output_path, 'output_1.bmp'), output_1[0])
 imageio.imsave(path.join(output_path, 'output_2.bmp'), output_2[0])
 imageio.imsave(path.join(output_path, 'output_3.bmp'), output_3[0])

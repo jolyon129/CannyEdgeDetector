@@ -116,7 +116,7 @@ def gradient_operator(img):
 
 def non_maxima_suppression(gx, gy, magnitude):
     '''
-    Apply non-maxima suppresion based on given Gx, Gy, and Magnitude
+    Apply non-maximum suppression based on given Gx, Gy, and Magnitude
     :param gx: Normalized Gx
     :param gy: Normalized Gy
     :param magnitude: Normalized Manitude
@@ -236,43 +236,48 @@ def thresholding(magnitude_after_sup, p):
 # Run Canny Detector
 if __name__ == '__main__':
     file_path, file_name, file_name_without_extension = None, None, None
-    for file in os.listdir(os.path.dirname(__file__)):
+    # Find the bmp image in current directory
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    for file in os.listdir(script_path):
         if file.endswith('.bmp'):
-            file_path = os.path.join(os.path.dirname(__file__), file)
+            file_path = os.path.join(script_path, file)
             file_name = file
+            print('Processing the image: ' + file)
             break
     if not file_path:
         print('Cannot find a bmp file!')
         sys.exit(0)
 
     file_name_without_extension = file_name[:-4]
-    output_path = os.path.join(os.path.dirname(__file__), 'output', file_name_without_extension)
-    npy_path = os.path.join(os.path.dirname(__file__), 'npy', file_name_without_extension)
+    output_path = os.path.join(script_path, 'output', file_name_without_extension)
+    npy_path = os.path.join(script_path, 'npy', file_name_without_extension)
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     if not os.path.exists(npy_path):
         os.mkdir(npy_path)
     input_img = imageio.imread(file_path)
+    # Gaussian Filter
     output_after_gaussian = gaussian_smoothing(input_img)
     imageio.imwrite(os.path.join(output_path, 'after_gaussian.bmp'), output_after_gaussian)
-
+    # Calculate gradient and magnitude
     (gx, gy, magnitude) = gradient_operator(output_after_gaussian)
     imageio.imwrite(os.path.join(output_path, 'gx.bmp'), gx)
     imageio.imwrite(os.path.join(output_path, 'gy.bmp'), gy)
-    imageio.imwrite(os.path.join(output_path, 'magnitude.bmp'), magnitude)
-
+    imageio.imwrite(os.path.join(output_path, 'magnitude_before_sup.bmp'), magnitude)
+    # Do non-maximum suppression
     magnitude_after_sup = non_maxima_suppression(gx, gy, magnitude)
     imageio.imwrite(os.path.join(output_path, 'magnitude_after_sup.bmp'), magnitude_after_sup)
-
+    # Thresholding with there ps, 0.1, 0.3, 0.5
     output_1, T_1, num_1 = thresholding(magnitude_after_sup, 0.1)
     output_3, T_3, num_3 = thresholding(magnitude_after_sup, 0.3)
     output_5, T_5, num_5 = thresholding(magnitude_after_sup, 0.5)
 
     results = open(os.path.join(output_path, 'results.txt'), 'w')
     results.write('P    ' + 'Threshold' + '  ' + 'Number of Edge Pixels' + '\n')
-    results.write('0.1  ' + str(T_1) + '    ' + str(num_1) + '\n')
-    results.write('0.3  ' + str(T_3) + '    ' + str(num_3) + '\n')
-    results.write('0.5  ' + str(T_5) + '    ' + str(num_5) + '\n')
+    results.write('0.1  ' + str(T_1) + '      ' + str(num_1) + '\n')
+    results.write('0.3  ' + str(T_3) + '      ' + str(num_3) + '\n')
+    results.write('0.5  ' + str(T_5) + '      ' + str(num_5) + '\n')
     imageio.imwrite(os.path.join(output_path, 'output_1.bmp'), output_1)
     imageio.imwrite(os.path.join(output_path, 'output_3.bmp'), output_3)
     imageio.imwrite(os.path.join(output_path, 'output_5.bmp'), output_5)
+    results.close()
