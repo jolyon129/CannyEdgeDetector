@@ -98,9 +98,13 @@ def gradient_operator(img):
     # and generate magnitude array
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
+            # normalize the gradient.
+            # Using the formula from wiki.
+            # https://en.wikipedia.org/wiki/Normalization_(image_processing)
             gx[i][j] = (gx[i][j] - gx_min) * 255 / (gx_max - gx_min)
             gy[i][j] = (gy[i][j] - gy_min) * 255 / (gy_max - gy_min)
             magnitude_arr[i][j] = np.sqrt(np.power(gx[i][j], 2) + np.power(gy[i][j], 2))
+            # Tracking the minimum and maximum of magnitude value
             if magnitude_arr[i][j] > mag_max:
                 mag_max = magnitude_arr[i][j]
             if magnitude_arr[i][j] < mag_min:
@@ -109,6 +113,8 @@ def gradient_operator(img):
     # normalize magnitude
     for i in range(magnitude_arr.shape[0]):
         for j in range(magnitude_arr.shape[1]):
+            # Using the formula from wiki.
+            # https://en.wikipedia.org/wiki/Normalization_(image_processing)
             magnitude_arr[i][j] = (magnitude_arr[i][j] - mag_min) * 255 / (mag_max - mag_min)
 
     return gx, gy, magnitude_arr
