@@ -2,7 +2,7 @@ import canny_detector
 import imageio
 import os
 
-file_name = 'zebra-crossing-1.bmp'
+file_name = 'test.bmp'
 # file_name = 'Lena256.bmp'
 script_path = os.path.dirname(os.path.realpath(__file__))
 print('Processing the image: ' + file_name)
