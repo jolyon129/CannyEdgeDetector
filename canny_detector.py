@@ -11,8 +11,8 @@ def gaussian_smoothing(img):
     :return: Return a new image
     '''
     # img.shape stores the number of rows and columns of the img
-    width = img.shape[0]
-    height = img.shape[1]
+    height = img.shape[0]
+    width = img.shape[1]
     gaussian_mask = [[1, 1, 2, 2, 2, 1, 1],
                      [1, 2, 2, 4, 2, 2, 1],
                      [2, 2, 4, 8, 4, 2, 2],
@@ -21,14 +21,14 @@ def gaussian_smoothing(img):
                      [1, 2, 2, 4, 2, 2, 1],
                      [1, 1, 2, 2, 2, 1, 1]]
     # Initiate  a new Img Array with 0 as default value
-    new_gray = np.zeros([width, height], dtype=np.uint8)
+    new_gray = np.zeros([height, width], dtype=np.uint8)
     # There are 3 layers of pixels are out of boarder.
-    width_range = width - 3
     height_range = height - 3
-    for row in range(width):
-        for col in range(height):
+    width_range = width - 3
+    for row in range(height):
+        for col in range(width):
             # if the current pixel is not out of boundary
-            if 3 <= row < width_range and 3 <= col < height_range:
+            if 3 <= row < height_range and 3 <= col < width_range:
                 # let the x and y be the corresponding pixel compared with the mask
                 sum_of_value, x, y = 0, 0, 0
                 # do convolution wth the mask
@@ -50,12 +50,12 @@ def gradient_operator(img):
     :return: return there values (Gx, Gy, Magnitude)
     '''
     # img.shape store the number of rows and columns
-    width = img.shape[0]
-    height = img.shape[1]
+    height = img.shape[0]
+    width = img.shape[1]
     # Initiate three Img Arrays of zero, Gx, Gy, Magnitude
-    gx = np.zeros([width, height], dtype=np.uint8)
-    gy = np.zeros([width, height], dtype=np.uint8)
-    magnitude_arr = np.zeros([width, height], dtype=np.uint8)
+    gx = np.zeros([height, width], dtype=np.uint8)
+    gy = np.zeros([height, width], dtype=np.uint8)
+    magnitude_arr = np.zeros([height, width], dtype=np.uint8)
     prewitt_mask = {
         'Gx': ([-1, 0, 1],
                [-1, 0, 1],
@@ -66,10 +66,10 @@ def gradient_operator(img):
     }
     # When iterate the pixels, track the maximum and minimum of Gx and Gy
     gx_min, gy_min, gx_max, gy_max = sys.maxsize, sys.maxsize, 0, 0
-    for row in range(width):
-        for col in range(height):
+    for row in range(height):
+        for col in range(width):
             # There are total 4 layers of pixels of the original image is out of boundary.
-            if 4 <= row < width - 4 and 4 <= col < height - 4:
+            if 4 <= row < height - 4 and 4 <= col < width - 4:
                 sum_gx, sum_gy, new_i, new_j = 0, 0, 0, 0
                 # Convolution
                 for i in range(3):
@@ -129,18 +129,18 @@ def non_maxima_suppression(gx, gy, magnitude):
     :return:
     '''
     # img.shape store the number of rows and columns
-    width = magnitude.shape[0]
-    height = magnitude.shape[1]
+    height = magnitude.shape[0]
+    width = magnitude.shape[1]
     # a new array of zero
-    magnitude_after_sup = np.zeros([width, height], dtype=np.uint8)
+    magnitude_after_sup = np.zeros([height, width], dtype=np.uint8)
     pi = np.pi
     # Each sector occupies two section, where a section is pi/8
     sec = pi / 8
-    for i in range(width):
-        for j in range(height):
+    for i in range(height):
+        for j in range(width):
             # There are overall 5 layers of pixels are out of boarder. I don't need to iterate those pixels.
             # narrow the range
-            if 5 <= i < width - 5 and 5 <= j < height - 5:
+            if 5 <= i < height - 5 and 5 <= j < width - 5:
                 # We need to deal with the case seperately when gx equals 0
                 # if gx is 0, then the angle is 90 degree, pi/2. The angle belongs to sector 2.
                 if gx[i][j] == 0:
@@ -188,18 +188,18 @@ def thresholding(magnitude_after_sup, p):
     :param p:  The percentage of pixels that are edge pixels. 0<=p<=1
     :return:   (output, T, num_edge_pixels_after_threshold)
     '''
-    width = magnitude_after_sup.shape[0]
-    height = magnitude_after_sup.shape[1]
-    output = np.zeros([width, height], dtype=np.uint8)
+    height = magnitude_after_sup.shape[0]
+    width = magnitude_after_sup.shape[1]
+    output = np.zeros([height, width], dtype=np.uint8)
     # initialize an array of zero,
     # which is ued to count the number of pixels in each gray level from 0 to 255
     gray_level_count = [0 for i in range(256)]
     # Calculating the gray-scale histogram
-    for i in range(width):
-        for j in range(height):
+    for i in range(height):
+        for j in range(width):
             gray_level_count[magnitude_after_sup[i][j]] += 1
     #  The original total number of pixels(including 0)
-    total_pixels = width * height
+    total_pixels = height * width
     # The number of edge pixels (The total number minus the number of pixels with gray value of 0)
     num_edge_pixels = total_pixels - gray_level_count[0]
     num_edge_pixels_after_threshold = None
@@ -228,8 +228,8 @@ def thresholding(magnitude_after_sup, p):
         # store the difference
         min_difference = current_difference
     # Threshold the pixels
-    for row in range(width):
-        for col in range(height):
+    for row in range(height):
+        for col in range(width):
             # Only store the pixels that are great than T
             if magnitude_after_sup[row][col] > T:
                 output[row][col] = magnitude_after_sup[row][col]
